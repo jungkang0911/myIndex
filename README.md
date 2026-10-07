@@ -6,7 +6,7 @@ Personal homepage · Fixed HTML template · AI-ready Skill
 
 myIndex 是可直接開啟的單檔 HTML 起始頁，也是一份能交給 AI 使用的 Skill。每次安裝都複製專案中的固定範本，個人設定另外保存，避免 AI 每次產生不同的版型。
 
-![myIndex 淺色版：分頁、搜尋、書籤、筆記與待辦](docs/images/light.png)
+![myIndex 淺色版：分頁、搜尋、書籤、筆記與待辦](docs/images/light-demo.png)
 
 ## 為什麼用 myIndex Skill？
 
@@ -31,7 +31,7 @@ myIndex 是可直接開啟的單檔 HTML 起始頁，也是一份能交給 AI �
 | 本地路徑 | 保存資料夾、檔案及網路分享路徑；也可複製路徑 |
 | 匯入／匯出 | 支援設定 JSON 與瀏覽器匯出的書籤 HTML |
 
-![myIndex 深色主題](docs/images/dark.png)
+![myIndex 深色主題](docs/images/dark-demo.png)
 
 ## 快速試用
 
