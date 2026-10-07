@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyIndex</title>
+<style>
+:root{
+  --bg:#eef1f5; --panel:#ffffff; --text:#1f2937; --muted:#6b7280; --border:#e5e7eb;
+  --accent:#2563eb; --accent-weak:#dbeafe; --danger:#dc2626; --shadow:0 1px 3px rgba(0,0,0,.08);
+}
+body.dark{
+  --bg:#111827; --panel:#1f2937; --text:#e5e7eb; --muted:#9ca3af; --border:#374151;
+  --accent:#60a5fa; --accent-weak:#1e3a5f; --shadow:0 1px 3px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI","Microsoft JhengHei",sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+button{font:inherit;cursor:pointer}
+input,textarea,select{font:inherit;color:var(--text);background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:6px 8px}
+
+/* Top bar */
+header{display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--panel);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+.logo{font-weight:700;font-size:18px;color:var(--accent);white-space:nowrap}
+.tabs{display:flex;gap:4px;overflow-x:auto;flex:1}
+.tab{padding:6px 14px;border-radius:6px;border:none;background:transparent;color:var(--muted);white-space:nowrap}
+.tab.active{background:var(--accent-weak);color:var(--accent);font-weight:600}
+.tab .x{margin-left:6px;opacity:.6;display:none}
+body.editing .tab .x{display:inline}
+.tab.drag-over{outline:2px dashed var(--accent);color:var(--accent)}
+.tool{border:1px solid var(--border);background:var(--panel);color:var(--text);border-radius:6px;padding:6px 10px}
+.tool:hover{border-color:var(--accent)}
+.tool.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.edit-bar{display:none;align-items:center;justify-content:center;gap:12px;padding:8px 20px;background:var(--accent-weak);color:var(--accent);border-bottom:1px solid var(--border);font-size:13px;flex-wrap:wrap}
+body.editing .edit-bar{display:flex}
+.edit-bar button{border:none;background:var(--accent);color:#fff;border-radius:6px;padding:4px 14px}
+
+/* Hero: clock + search */
+.hero{text-align:center;padding:28px 20px 10px}
+.clock{font-size:42px;font-weight:300;letter-spacing:1px}
+.date{color:var(--muted);margin-bottom:16px}
+.search{display:flex;max-width:640px;margin:0 auto;box-shadow:var(--shadow);border-radius:8px;overflow:hidden}
+.search select{border:none;border-right:1px solid var(--border);border-radius:0}
+.search input{flex:1;border:none;border-radius:0;padding:12px;font-size:16px}
+.search input:focus{outline:none}
+.search button{border:none;background:var(--accent);color:#fff;padding:0 18px}
+
+/* Board */
+.board{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;padding:20px;align-items:start}
+.widget{background:var(--panel);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);overflow:hidden}
+.widget.drag-over{outline:2px dashed var(--accent)}
+.w-head{display:flex;align-items:center;gap:6px;padding:10px 12px;border-bottom:1px solid var(--border);font-weight:600}
+.w-head .title{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.w-head .act{display:none;border:none;background:none;color:var(--muted);padding:2px 4px}
+body.editing .w-head .act{display:inline}
+.w-head .act:hover{color:var(--accent)}
+.w-head .act.del:hover{color:var(--danger)}
+.collapse{border:none;background:none;color:var(--muted);padding:0 2px}
+.w-body{padding:6px 0}
+.widget.collapsed .w-body{display:none}
+
+.link{display:flex;align-items:center;gap:8px;padding:6px 12px;color:var(--text);text-decoration:none}
+.link:hover{background:var(--accent-weak)}
+.link img,.link .fav{width:16px;height:16px;flex:none;border-radius:3px}
+.link .fav{display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;font-size:10px;font-weight:700}
+.link .name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.link .ops{display:none;gap:2px}
+body.editing .link .ops{display:flex}
+body.editing .link{cursor:grab}
+.link .ops button{border:none;background:none;color:var(--muted);padding:0 3px}
+.link .ops button:hover{color:var(--accent)}
+.link.dragging,.widget.dragging{opacity:.4}
+.grip{display:none;color:var(--muted);cursor:grab;letter-spacing:-3px;padding-right:3px;user-select:none}
+body.editing .grip{display:inline}
+body.editing .w-head{cursor:grab}
+.link img{pointer-events:none}
+.link.drop-before{box-shadow:inset 0 3px 0 var(--accent)}
+.link.drop-after{box-shadow:inset 0 -3px 0 var(--accent)}
+.widget.drop-before{box-shadow:-5px 0 0 var(--accent)}
+.widget.drop-after{box-shadow:5px 0 0 var(--accent)}
+.add-link{display:none;margin:4px 12px 6px;border:1px dashed var(--border);background:none;color:var(--muted);border-radius:6px;padding:4px;width:calc(100% - 24px)}
+body.editing .add-link{display:block}
+.empty{color:var(--muted);padding:8px 12px;font-size:13px}
+
+.notes textarea{width:calc(100% - 24px);margin:6px 12px;min-height:120px;resize:vertical}
+.todo-item{display:flex;align-items:center;gap:8px;padding:4px 12px}
+.todo-item.done span{text-decoration:line-through;color:var(--muted)}
+.todo-item span{flex:1}
+.todo-item button{border:none;background:none;color:var(--muted)}
+.todo-add{display:flex;gap:6px;padding:6px 12px}
+.todo-add input{flex:1}
+
+.add-widget{display:none;min-height:80px;border:2px dashed var(--border);border-radius:10px;background:none;color:var(--muted);font-size:15px}
+body.editing .add-widget{display:block}
+
+.link .fav.local{background:none;font-size:14px}
+.link .copy{border:none;background:none;color:var(--muted);padding:0 3px;opacity:0}
+.link:hover .copy{opacity:1}
+.link .copy:hover{color:var(--accent)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:#111827;color:#fff;padding:8px 16px;border-radius:8px;opacity:0;pointer-events:none;transition:.2s;z-index:200;max-width:90vw;word-break:break-all}
+.toast.show{opacity:1;transform:translateX(-50%)}
+
+/* Modal */
+.mask{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:100}
+.mask.show{display:flex}
+.modal{background:var(--panel);border-radius:10px;padding:20px;width:min(440px,92vw);box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.modal h3{margin:0 0 14px}
+.modal label{display:block;margin:10px 0 4px;color:var(--muted);font-size:13px}
+.modal input,.modal select,.modal textarea{width:100%}
+.modal .btns{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+.modal .primary{background:var(--accent);color:#fff;border:none;border-radius:6px;padding:7px 16px}
+.modal .secondary{background:none;border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 16px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">▦ MyIndex</div>
+  <nav class="tabs" id="tabs"></nav>
+  <button class="tool" id="btnEdit" title="編輯模式">✎ 編輯</button>
+  <button class="tool" id="btnTheme" title="切換深色/淺色">◐</button>
+  <button class="tool" id="btnMenu" title="匯入 / 匯出">⋯</button>
+</header>
+<div class="edit-bar">
+  <span>✎ 編輯模式中：拖曳 ⋮⋮ 可排序連結（可跨區塊）與區塊標題列、新增/刪除區塊與分頁（雙擊分頁可改名）。所有變更已自動儲存。</span>
+  <button id="btnDone">✓ 完成編輯</button>
+  <span style="opacity:.7">或按 Esc</span>
+</div>
+
+<section class="hero">
+  <div class="clock" id="clock"></div>
+  <div class="date" id="date"></div>
+  <form class="search" id="searchForm">
+    <select id="engine">
+      <option value="https://www.google.com/search?q=">Google</option>
+      <option value="https://www.bing.com/search?q=">Bing</option>
+      <option value="https://duckduckgo.com/?q=">DuckDuckGo</option>
+      <option value="https://github.com/search?q=">GitHub</option>
+      <option value="https://stackoverflow.com/search?q=">StackOverflow</option>
+    </select>
+    <input id="q" placeholder="搜尋，或輸入網址後按 Enter…" autocomplete="off">
+    <button type="submit">搜尋</button>
+  </form>
+</section>
+
+<main class="board" id="board"></main>
+
+<!-- Generic modal -->
+<div class="mask" id="mask"><div class="modal" id="modal"></div></div>
+<input type="file" id="fileInput" accept=".json,.html,.htm" hidden>
+<div class="toast" id="toast"></div>
+
+<!-- 選用：同資料夾放 config.js（window.STARTPAGE_DEFAULT = {...}）作為首次開啟的預設內容；沒有此檔不影響使用 -->
+<script src="config.js"></script>
+
+<script>
+/* ================= State ================= */
+const KEY = 'startpage.v1';
+const uid = () => Math.random().toString(36).slice(2, 10);
+
+const defaultState = () => ({
+  theme: 'light',
+  engine: 0,
+  current: 0,
+  pages: [{
+    id: uid(), name: '首頁',
+    widgets: [
+      { id: uid(), type: 'links', title: '常用工具', links: [
+        { id: uid(), name: 'Google', url: 'https://www.google.com' },
+        { id: uid(), name: 'GitHub', url: 'https://github.com' },
+        { id: uid(), name: 'Azure DevOps', url: 'https://dev.azure.com' },
+        { id: uid(), name: 'ChatGPT', url: 'https://chatgpt.com' },
+        { id: uid(), name: 'Claude', url: 'https://claude.ai' },
+      ]},
+      { id: uid(), type: 'links', title: '新聞', links: [
+        { id: uid(), name: 'Hacker News', url: 'https://news.ycombinator.com' },
+        { id: uid(), name: 'iThome', url: 'https://www.ithome.com.tw' },
+      ]},
+      { id: uid(), type: 'notes', title: '筆記', text: '在這裡記錄一些事情…\n（自動儲存）' },
+      { id: uid(), type: 'todo', title: '待辦', items: [
+        { id: uid(), text: '點右上角「編輯」開始自訂', done: false },
+      ]},
+    ]
+  }]
+});
+
+let state;
+let editing = false;
+
+// 首次開啟時的預設內容：若同資料夾有 config.js（定義 window.STARTPAGE_DEFAULT），以它為準，方便統一派送
+function load() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(KEY));
+    if (saved) return validateState(saved);
+  } catch {}
+  try { return window.STARTPAGE_DEFAULT ? validateState(window.STARTPAGE_DEFAULT) : defaultState(); }
+  catch { return defaultState(); }
+}
+function save() { localStorage.setItem(KEY, JSON.stringify(state)); }
+
+function copyText(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text; document.body.appendChild(ta); ta.select();
+  document.execCommand('copy'); ta.remove();
+  toast('已複製路徑：' + text);
+}
+
+function toast(msg) {
+  let t = $('#toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 3000);
+}
+const page = () => state.pages[state.current] || state.pages[0];
+const findWidget = id => page().widgets.find(w => w.id === id);
+
+/* ================= Helpers ================= */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+// 本地路徑：D:\xxx、\\server\share、file:///…、%USERPROFILE%\…
+const isLocal = u => /^([a-z]:[\\/]|\\\\|file:|%[a-z_]+%)/i.test((u || '').trim());
+function normUrl(u) {
+  if (typeof u !== 'string') throw new Error('連結必須是文字');
+  u = u.trim().replace(/^"(.*)"$/, '$1');
+  if (/[\u0000-\u001f\u007f]/.test(u)) throw new Error('連結不能包含控制字元');
+  if (!u || isLocal(u)) return u;
+  if (/^[a-z][a-z0-9+.-]*:/i.test(u) && !/^https?:\/\//i.test(u)) throw new Error('只允許 HTTP、HTTPS 或本地路徑');
+  const parsed = new URL(/^https?:\/\//i.test(u) ? u : 'https://' + u);
+  if (!['http:', 'https:'].includes(parsed.protocol) || parsed.username || parsed.password) throw new Error('不支援這種連結');
+  return parsed.href;
+}
+function cleanWidgets(widgets) {
+  if (!Array.isArray(widgets) || widgets.length > 500) throw new Error('區塊格式不正確或過多');
+  const safeId = id => typeof id === 'string' && /^[a-zA-Z0-9_-]{1,80}$/.test(id) ? id : uid();
+  return widgets.map(w => {
+    if (!w || typeof w !== 'object') throw new Error('區塊格式不正確');
+    const type = w.type || (w.links ? 'links' : w.items ? 'todo' : 'notes');
+    const out = { id: safeId(w.id), type, title: String(w.title || '未分類'), collapsed: !!w.collapsed };
+    if (type === 'links') {
+      if (!Array.isArray(w.links) || w.links.length > 2000) throw new Error('連結格式不正確或過多');
+      out.links = w.links.map(l => ({ id: safeId(l.id), name: String(l.name || l.url || ''), url: normUrl(l.url), icon: typeof l.icon === 'string' ? l.icon : '' }));
+    } else if (type === 'notes') out.text = String(w.text || '');
+    else if (type === 'todo') {
+      if (!Array.isArray(w.items) || w.items.length > 2000) throw new Error('待辦格式不正確或過多');
+      out.items = w.items.map(t => ({ id: safeId(t.id), text: String(t.text || ''), done: !!t.done }));
+    } else throw new Error('不支援的區塊類型');
+    return out;
+  });
+}
+function validateState(s) {
+  if (!s || !Array.isArray(s.pages) || !s.pages.length || s.pages.length > 100) throw new Error('分頁格式不正確');
+  return { theme: s.theme === 'dark' ? 'dark' : 'light', engine: Number.isInteger(s.engine) && s.engine >= 0 && s.engine < 5 ? s.engine : 0,
+    current: Number.isInteger(s.current) && s.current >= 0 && s.current < s.pages.length ? s.current : 0,
+    pages: s.pages.map(p => ({ id: typeof p.id === 'string' && /^[a-zA-Z0-9_-]{1,80}$/.test(p.id) ? p.id : uid(), name: String(p.name || '首頁'), widgets: cleanWidgets(p.widgets) })) };
+}
+function host(u) { try { return new URL(u).hostname; } catch { return ''; } }
+function baseName(p) { return p.replace(/[\\/]+$/, '').split(/[\\/]/).pop() || p; }
+function displayName(url) { return isLocal(url) ? baseName(url) : (host(url) || url); }
+// Windows 路徑 → file:/// URL（D:\a b → file:///D:/a%20b，\\srv\share → file://srv/share）
+function toFileUrl(p) {
+  p = p.trim();
+  if (/^file:/i.test(p)) return p;
+  const enc = s => s.split('/').map(encodeURIComponent).join('/');
+  if (p.startsWith('\\\\')) return 'file://' + enc(p.slice(2).replace(/\\/g, '/'));
+  return 'file:///' + enc(p.replace(/\\/g, '/')).replace(/^([A-Za-z])%3A/, '$1:');
+}
+function favicon(link) {
+  // 自訂圖示：圖片網址/本地圖檔 → <img>；其他（emoji、文字）→ 直接顯示
+  const ic = (link.icon || '').trim();
+  if (ic) {
+    if (/^https:\/\//i.test(ic))
+      return `<img src="${esc(normUrl(ic))}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">`;
+    return `<span class="fav local">${esc([...ic].slice(0, 2).join(''))}</span>`;
+  }
+  if (isLocal(link.url)) {
+    const isFile = /\.[a-z0-9]{1,6}$/i.test(baseName(link.url));
+    return `<span class="fav local">${isFile ? '📄' : '📁'}</span>`;
+  }
+  const h = host(link.url);
+  const letter = esc((link.name || h || '?').trim().charAt(0).toUpperCase());
+  if (!h) return `<span class="fav">${letter}</span>`;
+  // No background requests to bookmark hosts or network shares.
+  return `<span class="fav">${letter}</span>`;
+}
+
+/* ================= Render ================= */
+state = load();
+function render() {
+  document.body.classList.toggle('dark', state.theme === 'dark');
+  document.body.classList.toggle('editing', editing);
+  $('#btnEdit').classList.toggle('on', editing);
+  $('#btnEdit').textContent = editing ? '✓ 完成' : '✎ 編輯';
+  $('#btnEdit').title = editing ? '結束編輯模式（Esc）' : '編輯模式';
+  $('#engine').selectedIndex = state.engine || 0;
+  renderTabs();
+  renderBoard();
+}
+
+function renderTabs() {
+  const tabs = $('#tabs');
+  tabs.innerHTML = state.pages.map((p, i) =>
+    `<button class="tab ${i === state.current ? 'active' : ''}" data-i="${i}">${esc(p.name)}<span class="x" data-del="${i}" title="刪除分頁">✕</span></button>`
+  ).join('') + (editing ? `<button class="tab" id="addPage">＋ 分頁</button>` : '');
+}
+
+function renderBoard() {
+  const board = $('#board');
+  board.innerHTML = page().widgets.map(widgetHtml).join('') +
+    `<button class="add-widget" id="addWidget">＋ 新增區塊</button>`;
+}
+
+function widgetHtml(w) {
+  let body = '';
+  if (w.type === 'links') {
+    body = (w.links.length ? w.links.map(l => `
+      <a class="link" href="${esc(isLocal(l.url) ? toFileUrl(l.url) : l.url)}" target="_blank" rel="noopener" draggable="${editing}" data-lid="${l.id}" data-wid="${w.id}" title="${esc(l.url)}">
+        <span class="grip">⋮⋮</span>${favicon(l)}<span class="name">${esc(l.name)}</span>
+        ${isLocal(l.url) ? `<button class="copy" data-act="copyPath" title="複製路徑（可貼到檔案總管 / Win+R）">⧉</button>` : ''}
+        <span class="ops"><button data-act="editLink" title="編輯">✎</button><button data-act="delLink" title="刪除">✕</button></span>
+      </a>`).join('') : `<div class="empty">尚無連結</div>`) +
+      `<button class="add-link" data-act="addLink">＋ 新增連結</button>`;
+  } else if (w.type === 'notes') {
+    body = `<div class="notes"><textarea data-notes="${w.id}">${esc(w.text)}</textarea></div>`;
+  } else if (w.type === 'todo') {
+    body = w.items.map(t => `
+      <div class="todo-item ${t.done ? 'done' : ''}">
+        <input type="checkbox" data-todo="${t.id}" ${t.done ? 'checked' : ''}>
+        <span>${esc(t.text)}</span>
+        <button data-act="delTodo" data-tid="${t.id}" title="刪除">✕</button>
+      </div>`).join('') +
+      `<form class="todo-add" data-todoform="${w.id}"><input placeholder="新增待辦…"><button class="tool">＋</button></form>`;
+  }
+  return `
+  <section class="widget ${w.collapsed ? 'collapsed' : ''}" data-wid="${w.id}">
+    <div class="w-head" draggable="${editing}">
+      <span class="grip" title="拖曳移動區塊">⋮⋮</span>
+      <button class="collapse" data-act="collapse">${w.collapsed ? '▸' : '▾'}</button>
+      <span class="title">${esc(w.title)}</span>
+      <button class="act" data-act="moveL" title="左移">◀</button>
+      <button class="act" data-act="moveR" title="右移">▶</button>
+      <button class="act" data-act="editWidget" title="重新命名">✎</button>
+      <button class="act" data-act="moveWidget" title="移到其他分頁">⇄</button>
+      <button class="act del" data-act="delWidget" title="刪除區塊">✕</button>
+    </div>
+    <div class="w-body">${body}</div>
+  </section>`;
+}
+
+/* ================= Modal ================= */
+function modal(title, fields, onOk, okText = '確定') {
+  const m = $('#modal');
+  m.innerHTML = `<h3>${esc(title)}</h3>` + fields.map(f => {
+    if (f.type === 'select') return `<label>${esc(f.label)}</label><select name="${f.name}">${f.options.map(o => `<option value="${esc(o[0])}"${o[0] === f.value ? ' selected' : ''}>${esc(o[1])}</option>`).join('')}</select>`;
+    if (f.type === 'info') return `<div style="color:var(--muted);font-size:13px;line-height:1.6">${f.html}</div>`;
+    if (f.type === 'button') return `<button class="secondary" style="width:100%;margin-top:8px" data-mbtn="${f.name}">${esc(f.label)}</button>`;
+    return `<label>${esc(f.label)}</label><input name="${f.name}" value="${esc(f.value || '')}" placeholder="${esc(f.placeholder || '')}">`;
+  }).join('') + `<div class="btns"><button class="secondary" data-close>取消</button>${onOk ? `<button class="primary" data-ok>${esc(okText)}</button>` : ''}</div>`;
+  $('#mask').classList.add('show');
+  const first = m.querySelector('input,select'); first && first.focus();
+  const close = () => $('#mask').classList.remove('show');
+  m.querySelector('[data-close]').onclick = close;
+  fields.filter(f => f.type === 'button').forEach(f => m.querySelector(`[data-mbtn="${f.name}"]`).onclick = () => { close(); f.onClick(); });
+  const ok = () => {
+    const vals = {};
+    m.querySelectorAll('[name]').forEach(el => vals[el.name] = el.value);
+    if (onOk(vals) !== false) { close(); save(); render(); }
+  };
+  if (onOk) {
+    m.querySelector('[data-ok]').onclick = ok;
+    m.onkeydown = e => { if (e.key === 'Enter' && e.target.tagName === 'INPUT') ok(); };
+  }
+}
+
+/* ================= Events ================= */
+// Clock
+function tick() {
+  const d = new Date();
+  $('#clock').textContent = d.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false });
+  $('#date').textContent = d.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+}
+tick(); setInterval(tick, 1000);
+
+// Search
+$('#engine').onchange = e => { state.engine = e.target.selectedIndex; save(); };
+$('#searchForm').onsubmit = e => {
+  e.preventDefault();
+  const q = $('#q').value.trim();
+  if (!q) return;
+  const looksUrl = /^(https?:\/\/)?[\w-]+(\.[\w-]+)+(:\d+)?(\/\S*)?$/i.test(q) && !q.includes(' ');
+  location.href = looksUrl ? normUrl(q) : $('#engine').value + encodeURIComponent(q);
+};
+
+// Top tools
+$('#btnEdit').onclick = () => { editing = !editing; render(); };
+$('#btnDone').onclick = () => { editing = false; render(); };
+// Esc 結束編輯（對話框開著時交給對話框自己處理）
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if ($('#mask').classList.contains('show')) { $('#mask').classList.remove('show'); return; }
+  if (editing) { editing = false; render(); }
+});
+$('#btnTheme').onclick = () => { state.theme = state.theme === 'dark' ? 'light' : 'dark'; save(); render(); };
+$('#btnMenu').onclick = () => modal('匯入 / 匯出', [
+  { type: 'info', html: '資料存在此瀏覽器的 localStorage。換電腦或清除瀏覽資料前請先匯出備份。<br>匯出的 JSON 改名為 config.js 並在開頭加上 <code>window.STARTPAGE_DEFAULT = </code>，即可當成同仁的預設內容派送。<br>匯入：完整設定檔（含 pages）會取代全部；只含 widgets 的 JSON 或書籤 HTML 會併入目前分頁。' },
+  { type: 'button', name: 'exp', label: '⬇ 匯出設定 (JSON)', onClick: exportJson },
+  { type: 'button', name: 'imp', label: '⬆ 匯入設定 (JSON) / 瀏覽器書籤 (HTML)', onClick: () => $('#fileInput').click() },
+  { type: 'button', name: 'reset', label: '↺ 重設為預設內容', onClick: () => { if (confirm('確定清除所有自訂內容？')) { localStorage.removeItem(KEY); state = load(); save(); render(); } } },
+], null);
+
+// Tabs
+$('#tabs').onclick = e => {
+  const del = e.target.closest('[data-del]');
+  if (del) {
+    e.stopPropagation();
+    const i = +del.dataset.del;
+    if (state.pages.length === 1) return alert('至少要保留一個分頁');
+    if (!confirm(`刪除分頁「${state.pages[i].name}」？`)) return;
+    state.pages.splice(i, 1);
+    state.current = Math.min(state.current, state.pages.length - 1);
+    save(); render(); return;
+  }
+  if (e.target.id === 'addPage') {
+    return modal('新增分頁', [{ name: 'name', label: '分頁名稱', placeholder: '例如：工作' }], v => {
+      if (!v.name.trim()) return false;
+      state.pages.push({ id: uid(), name: v.name.trim(), widgets: [] });
+      state.current = state.pages.length - 1;
+    });
+  }
+  const tab = e.target.closest('.tab[data-i]');
+  if (tab) { state.current = +tab.dataset.i; save(); render(); }
+};
+$('#tabs').ondblclick = e => {
+  const tab = e.target.closest('.tab[data-i]');
+  if (!tab || !editing) return;
+  const p = state.pages[+tab.dataset.i];
+  modal('重新命名分頁', [{ name: 'name', label: '分頁名稱', value: p.name }], v => { if (!v.name.trim()) return false; p.name = v.name.trim(); });
+};
+
+// Board clicks
+$('#board').onclick = e => {
+  if (e.target.id === 'addWidget') {
+    return modal('新增區塊', [
+      { name: 'title', label: '標題', placeholder: '例如：專案連結' },
+      { type: 'select', name: 'type', label: '類型', options: [['links', '書籤清單'], ['notes', '筆記'], ['todo', '待辦清單']] },
+    ], v => {
+      const w = { id: uid(), type: v.type, title: v.title.trim() || '未命名' };
+      if (v.type === 'links') w.links = [];
+      if (v.type === 'notes') w.text = '';
+      if (v.type === 'todo') w.items = [];
+      page().widgets.push(w);
+    });
+  }
+  const btn = e.target.closest('[data-act]');
+  if (!btn) return;
+  e.preventDefault();
+  const wEl = btn.closest('.widget');
+  const w = findWidget(wEl.dataset.wid);
+  const ws = page().widgets;
+  const idx = ws.indexOf(w);
+  const linkEl = btn.closest('.link');
+  const link = linkEl && w.links.find(l => l.id === linkEl.dataset.lid);
+
+  switch (btn.dataset.act) {
+    case 'collapse': w.collapsed = !w.collapsed; break;
+    case 'moveL': if (idx > 0) [ws[idx - 1], ws[idx]] = [ws[idx], ws[idx - 1]]; break;
+    case 'moveR': if (idx < ws.length - 1) [ws[idx + 1], ws[idx]] = [ws[idx], ws[idx + 1]]; break;
+    case 'delWidget': if (!confirm(`刪除區塊「${w.title}」？`)) return; ws.splice(idx, 1); break;
+    case 'editWidget':
+      return modal('重新命名區塊', [{ name: 'title', label: '標題', value: w.title }], v => { w.title = v.title.trim() || w.title; });
+    case 'moveWidget': {
+      const others = state.pages.filter(p => p !== page());
+      if (!others.length) return alert('沒有其他分頁，請先「＋ 分頁」');
+      return modal(`移動區塊「${w.title}」`, [
+        { type: 'select', name: 'to', label: '移到分頁', options: others.map(p => [p.id, p.name]) },
+      ], v => {
+        ws.splice(idx, 1);
+        state.pages.find(p => p.id === v.to).widgets.push(w);
+      });
+    }
+    case 'addLink':
+      return modal('新增連結', [
+        { name: 'url', label: '網址或本地路徑', placeholder: 'https://…　或　D:\\資料夾　或　\\\\server\\share\\檔案.xlsx' },
+        { name: 'name', label: '名稱（可留空）' },
+        { name: 'icon', label: '圖示（可留空＝自動）', placeholder: '🚀　或　https://…/logo.png　或　D:\\icons\\a.png' },
+      ], v => {
+        const url = normUrl(v.url);
+        if (!url) return false;
+        const l = { id: uid(), url, name: v.name.trim() || displayName(url) };
+        if (v.icon.trim()) l.icon = v.icon.trim();
+        w.links.push(l);
+      });
+    case 'editLink': {
+      // 所在區塊：可選任何分頁的書籤清單，用來把連結移到其他分頁 / 區塊
+      const dests = state.pages.flatMap(p => p.widgets.filter(x => x.type === 'links').map(x => [x.id, `${p.name} / ${x.title}`]));
+      return modal('編輯連結', [
+        { name: 'url', label: '網址或本地路徑', value: link.url },
+        { name: 'name', label: '名稱', value: link.name },
+        { name: 'icon', label: '圖示（留空＝自動）', value: link.icon, placeholder: '🚀　或　https://…/logo.png　或　D:\\icons\\a.png' },
+        { type: 'select', name: 'to', label: '所在區塊（分頁 / 區塊）', value: w.id, options: dests },
+      ], v => {
+        link.url = normUrl(v.url) || link.url;
+        link.name = v.name.trim() || displayName(link.url);
+        const ic = v.icon.trim(); if (ic) link.icon = ic; else delete link.icon;
+        if (v.to && v.to !== w.id) {
+          const dest = state.pages.flatMap(p => p.widgets).find(x => x.id === v.to);
+          w.links.splice(w.links.indexOf(link), 1);
+          dest.links.push(link);
+        }
+      });
+    }
+    case 'copyPath': return copyText(link.url);
+    case 'delLink': w.links.splice(w.links.indexOf(link), 1); break;
+    case 'delTodo': w.items = w.items.filter(t => t.id !== btn.dataset.tid); break;
+  }
+  save(); render();
+};
+
+// Block navigation while editing
+$('#board').addEventListener('click', e => { if (editing && e.target.closest('.link')) e.preventDefault(); }, true);
+
+// Notes / todo
+$('#board').addEventListener('input', e => {
+  const id = e.target.dataset.notes;
+  if (id) { findWidget(id).text = e.target.value; save(); }
+});
+$('#board').addEventListener('change', e => {
+  const tid = e.target.dataset.todo;
+  if (!tid) return;
+  const w = findWidget(e.target.closest('.widget').dataset.wid);
+  const t = w.items.find(x => x.id === tid);
+  t.done = e.target.checked; save(); render();
+});
+$('#board').addEventListener('submit', e => {
+  const wid = e.target.dataset.todoform;
+  if (!wid) return;
+  e.preventDefault();
+  const text = e.target.querySelector('input').value.trim();
+  if (!text) return;
+  findWidget(wid).items.push({ id: uid(), text, done: false });
+  save(); render();
+  document.querySelector(`[data-todoform="${wid}"] input`).focus();
+});
+
+/* ===== Drag & drop (edit mode)：連結可跨區塊排序，區塊拖標題列排序；拖到分頁標籤可移到該分頁 ===== */
+// 拖曳中即時畫出「插入線」：連結為上/下橫線，區塊為左/右直線；放開時依插入線位置落點
+let drag = null;
+const clearDrop = () => document.querySelectorAll('.drop-before,.drop-after,.drag-over')
+  .forEach(x => x.classList.remove('drop-before', 'drop-after', 'drag-over'));
+$('#board').addEventListener('dragstart', e => {
+  if (!editing) return;
+  const t = e.target.nodeType === 3 ? e.target.parentElement : e.target;
+  const l = t.closest('.link'), h = t.closest('.w-head');
+  let el;
+  if (l) { drag = { kind: 'link', lid: l.dataset.lid, wid: l.dataset.wid }; el = l; }
+  else if (h) { el = h.closest('.widget'); drag = { kind: 'widget', wid: el.dataset.wid }; }
+  else return;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', '');
+  requestAnimationFrame(() => el.classList.add('dragging'));
+});
+$('#board').addEventListener('dragend', () => { drag = null; clearDrop(); render(); });
+$('#board').addEventListener('dragover', e => {
+  if (!drag) return;
+  const wEl = e.target.closest('.widget');
+  if (!wEl) return;
+  if (drag.kind === 'link') {
+    if (findWidget(wEl.dataset.wid).type !== 'links') return;
+    e.preventDefault();
+    clearDrop();
+    let over = e.target.closest('.link'), after;
+    if (over) after = e.clientY > over.getBoundingClientRect().top + over.offsetHeight / 2;
+    else { over = [...wEl.querySelectorAll('.link')].pop(); after = true; }  // 空白處 → 放到最後
+    if (over && over.dataset.lid !== drag.lid) over.classList.add(after ? 'drop-after' : 'drop-before');
+    else if (!over) wEl.classList.add('drag-over');                          // 空區塊
+  } else {
+    e.preventDefault();
+    clearDrop();
+    if (wEl.dataset.wid === drag.wid) return;
+    const r = wEl.getBoundingClientRect();
+    wEl.classList.add(e.clientX > r.left + r.width / 2 ? 'drop-after' : 'drop-before');
+  }
+});
+$('#board').addEventListener('drop', e => {
+  if (!drag) return;
+  e.preventDefault();
+  const sel = drag.kind === 'link' ? '.link' : '.widget';
+  const mark = document.querySelector(`${sel}.drop-before, ${sel}.drop-after`);
+  const after = mark && mark.classList.contains('drop-after');
+  if (drag.kind === 'link') {
+    const wEl = e.target.closest('.widget');
+    if (!wEl) return;
+    const from = findWidget(drag.wid), to = findWidget(wEl.dataset.wid);
+    if (!mark && !wEl.classList.contains('drag-over')) return;     // 放回原位
+    const [item] = from.links.splice(from.links.findIndex(l => l.id === drag.lid), 1);
+    const at = mark ? to.links.findIndex(l => l.id === mark.dataset.lid) + (after ? 1 : 0) : to.links.length;
+    to.links.splice(at, 0, item);
+  } else {
+    if (!mark) return;
+    const ws = page().widgets;
+    const [item] = ws.splice(ws.findIndex(w => w.id === drag.wid), 1);
+    ws.splice(ws.findIndex(w => w.id === mark.dataset.wid) + (after ? 1 : 0), 0, item);
+  }
+  save();
+});
+
+// 拖到分頁標籤 → 移到該分頁（區塊放最後；連結放進同名區塊，沒有就第一個書籤區塊，再沒有就新建同名區塊）
+$('#tabs').addEventListener('dragover', e => {
+  const tab = drag && e.target.closest('.tab[data-i]');
+  if (!tab || +tab.dataset.i === state.current) return;
+  e.preventDefault();
+  clearDrop();
+  tab.classList.add('drag-over');
+});
+$('#tabs').addEventListener('dragleave', e => { const tab = e.target.closest('.tab'); tab && tab.classList.remove('drag-over'); });
+$('#tabs').addEventListener('drop', e => {
+  const tab = drag && e.target.closest('.tab[data-i]');
+  if (!tab) return;
+  e.preventDefault();
+  const dest = state.pages[+tab.dataset.i];
+  if (dest === page()) return;
+  const from = findWidget(drag.wid);
+  if (drag.kind === 'widget') {
+    page().widgets.splice(page().widgets.indexOf(from), 1);
+    dest.widgets.push(from);
+    toast(`已將區塊「${from.title}」移到「${dest.name}」`);
+  } else {
+    const [item] = from.links.splice(from.links.findIndex(l => l.id === drag.lid), 1);
+    const links = dest.widgets.filter(w => w.type === 'links');
+    let to = links.find(w => w.title === from.title) || links[0];
+    if (!to) { to = { id: uid(), type: 'links', title: from.title, links: [] }; dest.widgets.push(to); }
+    to.links.push(item);
+    toast(`已將「${item.name}」移到「${dest.name} / ${to.title}」`);
+  }
+  save();
+});
+
+/* ================= Import / Export ================= */
+function exportJson() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `myindex-${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+$('#fileInput').onchange = async e => {
+  const f = e.target.files[0];
+  e.target.value = '';
+  if (!f) return;
+  if (f.size > 5 * 1024 * 1024) return alert('匯入檔案不可超過 5 MB');
+  const text = await f.text();
+  try {
+    let msg = '匯入完成';
+    if (/\.json$/i.test(f.name)) {
+      const s = JSON.parse(text);
+      if (Array.isArray(s.pages)) {
+        // 完整設定檔（匯出的備份）：整份取代
+        if (!confirm('這是完整設定檔，會取代目前所有內容，確定？')) return;
+        state = validateState(s);
+      } else {
+        // 片段：{ page?, widgets: [{ title, links: [{ name, url }] }] } 或直接一個陣列 → 併入指定 / 目前分頁
+        const widgets = Array.isArray(s) ? s : s.widgets;
+        if (!Array.isArray(widgets)) throw new Error('格式不正確（需要 pages 或 widgets）');
+        msg = mergeWidgets(widgets, s.page);
+      }
+    } else {
+      msg = importBookmarksHtml(text);
+    }
+    save(); render();
+    alert(msg);
+  } catch (err) { alert('匯入失敗：' + err.message); }
+};
+
+// Chrome / Edge / Firefox 匯出的書籤 HTML（Netscape 格式）→ 併入目前分頁，每個資料夾一個區塊
+function importBookmarksHtml(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const widgets = [];
+  const walk = (dl, title) => {
+    const links = [];
+    for (const dt of dl.querySelectorAll(':scope > dt, :scope > p > dt')) {
+      const a = dt.querySelector(':scope > a');
+      const h3 = dt.querySelector(':scope > h3');
+      const sub = dt.querySelector(':scope > dl');
+      if (a && /^https?:/i.test(a.href)) links.push({ id: uid(), name: a.textContent.trim() || host(a.href), url: a.href });
+      if (h3 && sub) walk(sub, h3.textContent.trim());
+    }
+    if (links.length) widgets.push({ id: uid(), type: 'links', title, links });
+  };
+  const root = doc.querySelector('dl');
+  if (!root) throw new Error('找不到書籤內容');
+  walk(root, '未分類');
+  if (!widgets.length) throw new Error('沒有可匯入的連結');
+  return mergeWidgets(widgets);
+}
+
+// 併入分頁（指定 pageName 且存在就用它，否則目前分頁）：同名連結區塊就把新連結加進去（網址重複略過），否則新增區塊
+function mergeWidgets(widgets, pageName) {
+  widgets = cleanWidgets(widgets);
+  const cur = (pageName && state.pages.find(p => p.name === pageName)) || page();
+  let added = 0, skipped = 0;
+  for (const w of widgets) {
+    const type = w.type || (w.links ? 'links' : w.items ? 'todo' : 'notes');
+    if (type !== 'links') { cur.widgets.push({ ...structuredClone(w), id: uid(), type }); continue; }
+    const links = (w.links || []).filter(l => l && l.url)
+      .map(l => ({ ...l, id: uid(), url: normUrl(l.url), name: l.name || displayName(l.url) }));
+    let target = cur.widgets.find(x => x.type === 'links' && x.title === w.title);
+    if (!target) { target = { id: uid(), type: 'links', title: w.title || '未分類', links: [] }; cur.widgets.push(target); }
+    for (const l of links) {
+      if (target.links.some(x => x.url === l.url)) { skipped++; continue; }
+      target.links.push(l); added++;
+    }
+  }
+  return `已併入「${cur.name}」：新增 ${added} 個連結` + (skipped ? `，略過重複 ${skipped} 個` : '');
+}
+
+render();
+</script>
+</body>
+</html>

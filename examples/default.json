@@ -1,0 +1,20 @@
+{
+  "theme": "light", "engine": 0, "current": 0,
+  "pages": [{"id": "home", "name": "首頁", "widgets": [
+    {"id": "tools", "type": "links", "title": "常用工具", "links": [
+      {"id": "github", "name": "GitHub", "url": "https://github.com", "icon": "🐙"},
+      {"id": "mdn", "name": "MDN Web Docs", "url": "https://developer.mozilla.org", "icon": "📚"},
+      {"id": "chatgpt", "name": "ChatGPT", "url": "https://chatgpt.com", "icon": "💬"}
+    ]},
+    {"id": "reading", "type": "links", "title": "閱讀清單", "links": [
+      {"id": "hn", "name": "Hacker News", "url": "https://news.ycombinator.com", "icon": "📰"},
+      {"id": "wiki", "name": "Wikipedia", "url": "https://www.wikipedia.org", "icon": "🌍"}
+    ]},
+    {"id": "notes", "type": "notes", "title": "今日筆記", "text": "把常用連結與今天的想法放在一起。\n\n今天的重點：\n• 整理專案書籤\n• 留一點時間學習新工具"},
+    {"id": "todo", "type": "todo", "title": "待辦事項", "items": [
+      {"id": "t1", "text": "建立自己的起始頁", "done": true},
+      {"id": "t2", "text": "匯入常用書籤", "done": false},
+      {"id": "t3", "text": "匯出一份設定備份", "done": false}
+    ]}
+  ]}, {"id": "learn", "name": "學習", "widgets": []}]
+}

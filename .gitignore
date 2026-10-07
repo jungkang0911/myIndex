@@ -1,0 +1,7 @@
+config.js
+*.bak
+node_modules/
+.env*
+startpage-*.json
+myindex-*.json
+!examples/default.json
