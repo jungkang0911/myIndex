@@ -12,11 +12,11 @@ const fs = require('node:fs');
   await page.locator('.widget').first().waitFor();
   if (await page.locator('.widget').count() !== 4) throw Error('Example widgets missing');
   // Freeze only the documentation screenshots; the shipped clock remains live.
-  await page.clock.install({ time: new Date('2026-09-09T00:00:00+08:00') });
-  await page.clock.pauseAt(new Date('2026-09-09T00:00:01+08:00'));
+  await page.clock.install({ time: new Date('2026-12-31T23:59:00+08:00') });
+  await page.clock.pauseAt(new Date('2026-12-31T23:59:01+08:00'));
   await page.evaluate(() => {
-    document.querySelector('#clock').textContent = '00:00';
-    document.querySelector('#date').textContent = '09月09日';
+    document.querySelector('#clock').textContent = '23:59';
+    document.querySelector('#date').textContent = '12/31';
   });
   const images = path.resolve(__dirname, '../docs/images');
   fs.mkdirSync(images, { recursive: true });
