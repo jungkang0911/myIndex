@@ -1,9 +1,9 @@
 ---
 name: myindex
 description: >
-  幫同仁安裝 / 更新個人瀏覽器起始頁 MyIndex（單檔 HTML：分頁、書籤區塊、本地路徑連結、筆記、待辦、搜尋列，資料存瀏覽器 localStorage），
+  幫同仁安裝 / 更新個人瀏覽器起始頁 myIndex（單檔 HTML：分頁、書籤區塊、本地路徑連結、筆記、待辦、搜尋列，資料存瀏覽器 localStorage），
   可從 Edge/Chrome 書籤挑資料夾產生預設內容 config.js，並教學設成瀏覽器首頁。
-  使用者說「裝起始頁」「安裝 MyIndex」「我也要那個首頁」「更新起始頁」「把書籤做成起始頁」「設成首頁」「起始頁加連結」「myindex」時使用。
+  使用者說「裝起始頁」「安裝 myIndex」「我也要那個首頁」「更新起始頁」「把書籤做成起始頁」「設成首頁」「起始頁加連結」「myindex」時使用。
 ---
 
 # myindex
@@ -30,7 +30,7 @@ description: >
 | 項目 | 值 |
 |------|-----|
 | 範本 | 本 skill 資料夾 `assets/index.html` |
-| 預設安裝位置 | `%USERPROFILE%\MyIndex\index.html`（使用者指定別處就照用） |
+| 預設安裝位置 | `%USERPROFILE%\myIndex\index.html`（使用者指定別處就照用） |
 | 預設內容檔 | 同資料夾 `config.js`（`window.STARTPAGE_DEFAULT = {...};`），只在 localStorage 為空時生效 |
 | 使用者資料 | 存在瀏覽器 localStorage（key `startpage.v1`），**不在檔案裡** |
 | 腳本 | `scripts/install.ps1`、`scripts/bookmarks-to-config.ps1`（以下 `$SK` = 本 skill 資料夾的絕對路徑） |
@@ -64,7 +64,7 @@ description: >
 2. 把清單給使用者，**請他自己挑**要放上起始頁的資料夾（工作相關的）。不要自行判斷或建議私人資料夾。
 3. 產生 JSON 並安裝成 config.js：
    ```powershell
-   $json = "$env:USERPROFILE\MyIndex\startpage-default.json"
+   $json = "$env:USERPROFILE\myIndex\startpage-default.json"
    & "$SK\scripts\bookmarks-to-config.ps1" -Folders '書籤列/工作','書籤列/DevOps' -Out $json
    & "$SK\scripts\install.ps1" -Config $json
    ```
@@ -108,7 +108,7 @@ description: >
 完成後回報：
 
 ```markdown
-## MyIndex 已安裝
+## myIndex 已安裝
 - 位置：<index.html 路徑>
 - 網址：<file:/// 網址>
 - 預設內容：<無 / 已從 N 個書籤資料夾產生 config.js>

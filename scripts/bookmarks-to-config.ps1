@@ -1,5 +1,5 @@
 ﻿<#
-  把 Edge / Chrome 書籤轉成 MyIndex 預設內容 JSON（每個書籤資料夾 → 一個書籤區塊）
+  把 Edge / Chrome 書籤轉成 myIndex 預設內容 JSON（每個書籤資料夾 → 一個書籤區塊）
   用法：
     .\bookmarks-to-config.ps1 -List                                   # 只列資料夾路徑與連結數（不輸出網址）
     .\bookmarks-to-config.ps1 -Folders '書籤列/工作','書籤列/DevOps' -Out .\startpage-default.json

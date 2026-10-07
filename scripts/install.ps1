@@ -1,13 +1,13 @@
 ﻿<#
-  安裝 / 更新 MyIndex 起始頁
+  安裝 / 更新 myIndex 起始頁
   用法：
-    .\install.ps1                                  # 裝到 %USERPROFILE%\MyIndex
+    .\install.ps1                                  # 裝到 %USERPROFILE%\myIndex
     .\install.ps1 -Target D:\MyStart               # 指定資料夾
     .\install.ps1 -Config .\startpage-default.json # 一併產生 config.js（首次開啟的預設內容）
   既有 index.html / config.js 會先備份成 .bak；使用者在瀏覽器裡的自訂內容存在 localStorage，不受影響。
 #>
 param(
-  [string]$Target = (Join-Path $env:USERPROFILE 'MyIndex'),
+  [string]$Target = (Join-Path $env:USERPROFILE 'myIndex'),
   [string]$Config
 )
 $ErrorActionPreference = 'Stop'

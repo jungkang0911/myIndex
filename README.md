@@ -1,16 +1,16 @@
-# MyIndex
+# myIndex
 
 Personal homepage · Fixed HTML template · AI-ready Skill
 
 **讓 AI 幫你安裝同一套起始頁，把每天會用到的連結、筆記與待辦放在一起。**
 
-MyIndex 是可直接開啟的單檔 HTML 起始頁，也是一份能交給 AI 使用的 Skill。每次安裝都複製專案中的固定範本，個人設定另外保存，避免 AI 每次產生不同的版型。
+myIndex 是可直接開啟的單檔 HTML 起始頁，也是一份能交給 AI 使用的 Skill。每次安裝都複製專案中的固定範本，個人設定另外保存，避免 AI 每次產生不同的版型。
 
-![MyIndex 淺色版：分頁、搜尋、書籤、筆記與待辦](docs/images/light.png)
+![myIndex 淺色版：分頁、搜尋、書籤、筆記與待辦](docs/images/light.png)
 
-## 為什麼用 MyIndex Skill？
+## 為什麼用 myIndex Skill？
 
-**本機落地，資料由你掌握。** AI 把頁面安裝到你的電腦，書籤、筆記與待辦儲存在目前瀏覽器，不需要為 MyIndex 註冊帳號，也不依賴雲端資料庫。個人資料不會由本專案自動上傳；搜尋、點擊外部連結或使用外部圖片時，仍會連線到相應網站。
+**本機落地，資料由你掌握。** AI 把頁面安裝到你的電腦，書籤、筆記與待辦儲存在目前瀏覽器，不需要為 myIndex 註冊帳號，也不依賴雲端資料庫。個人資料不會由本專案自動上傳；搜尋、點擊外部連結或使用外部圖片時，仍會連線到相應網站。
 
 **每次都是同一套版型。** Skill 直接使用隨附的 HTML 範本，AI 負責安裝與整理設定，不必每次重新設計頁面。更新可以保留個人設定，版型也方便維護。
 
@@ -31,18 +31,18 @@ MyIndex 是可直接開啟的單檔 HTML 起始頁，也是一份能交給 AI �
 | 本地路徑 | 保存資料夾、檔案及網路分享路徑；也可複製路徑 |
 | 匯入／匯出 | 支援設定 JSON 與瀏覽器匯出的書籤 HTML |
 
-![MyIndex 深色主題](docs/images/dark.png)
+![myIndex 深色主題](docs/images/dark.png)
 
 ## 快速試用
 
 下載完整專案，解壓後在專案資料夾開啟 PowerShell：
 
 ```powershell
-# 安裝到使用者資料夾的 MyIndex
+# 安裝到使用者資料夾的 myIndex
 powershell.exe -NoProfile -File .\scripts\install.ps1
 
 # 安裝範例內容到指定資料夾
-powershell.exe -NoProfile -File .\scripts\install.ps1 -Target D:\MyMyIndex -Config .\examples\default.json
+powershell.exe -NoProfile -File .\scripts\install.ps1 -Target D:\myIndex -Config .\examples\default.json
 ```
 
 用 Edge 或 Chrome 開啟安裝位置的 `index.html`。不需要 Node.js、資料庫或網站伺服器。安裝腳本供 Windows PowerShell 5.1+ 使用；其他平台可手動複製 `assets/index.html`，以支援現代 JavaScript 的瀏覽器開啟。
@@ -113,7 +113,7 @@ powershell.exe -NoProfile -File .\scripts\bookmarks-to-config.ps1 -List
 ## 資料與更新
 
 - 個人資料存在瀏覽器 `localStorage`，鍵值為 `startpage.v1`；不會由本專案同步到雲端。
-- 為相容舊版，保留 `startpage.v1` 與 `window.STARTPAGE_DEFAULT` 設定名稱；產品與 Skill 名稱為 MyIndex。
+- 為相容舊版，保留 `startpage.v1` 與 `window.STARTPAGE_DEFAULT` 設定名稱；產品與 Skill 名稱為 myIndex。
 - 清除瀏覽資料、換瀏覽器或移動 HTML 路徑，可能看不到舊資料，請先匯出備份。
 - 外部連結、搜尋及明確指定的 HTTPS 圖片會連線到對應網站；預設圖示使用字母或 Emoji，不會自動向書籤網站請求 favicon。
 - 更新請使用同一個安裝路徑。不傳 `-Config` 時會保留現有 `config.js`，舊 HTML 備份為 `.bak`。
