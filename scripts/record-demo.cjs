@@ -2,6 +2,7 @@ const { chromium } = require('playwright');
 const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
+const { freezeClock, setClockText } = require('./demo-clock.cjs');
 (async () => {
  const root = path.resolve(__dirname, '..');
  const frames = process.argv[3];
@@ -9,9 +10,10 @@ const { pathToFileURL } = require('node:url');
  const browser = await chromium.launch({headless:true});
  for (const kind of ['drag','import']) {
   const page = await browser.newPage({viewport:{width:1152,height:650}, deviceScaleFactor:1});
+  await freezeClock(page);
   await page.goto(pathToFileURL(path.resolve(process.argv[2])).href);
+  await setClockText(page);
   await page.evaluate(() => {
-   tick = () => {document.querySelector('#clock').textContent='23:59';document.querySelector('#date').textContent='12/31';};tick();
    const pointer=document.createElement('div');pointer.id='demo-pointer';pointer.style.cssText='position:fixed;width:18px;height:18px;border:3px solid #2563eb;background:#bfdbfe;border-radius:50%;z-index:9999;pointer-events:none;left:10px;top:10px;';document.body.append(pointer);
    document.addEventListener('mousemove',e=>{pointer.style.left=e.clientX+'px';pointer.style.top=e.clientY+'px';});
   });

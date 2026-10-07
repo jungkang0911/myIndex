@@ -3,21 +3,18 @@ const { chromium } = require('playwright');
 const { pathToFileURL } = require('node:url');
 const path = require('node:path');
 const fs = require('node:fs');
+const { freezeClock, setClockText } = require('./demo-clock.cjs');
 (async () => {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport: { width: 1440, height: 960 }, deviceScaleFactor: 1 });
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
+  await freezeClock(page);
   await page.goto(pathToFileURL(path.resolve(process.argv[2])).href);
   await page.locator('.widget').first().waitFor();
   if (await page.locator('.widget').count() !== 4) throw Error('Example widgets missing');
   // Freeze only the documentation screenshots; the shipped clock remains live.
-  await page.clock.install({ time: new Date('2026-12-31T23:59:00+08:00') });
-  await page.clock.pauseAt(new Date('2026-12-31T23:59:01+08:00'));
-  await page.evaluate(() => {
-    document.querySelector('#clock').textContent = '23:59';
-    document.querySelector('#date').textContent = '12/31';
-  });
+  await setClockText(page);
   const images = path.resolve(__dirname, '../docs/images');
   fs.mkdirSync(images, { recursive: true });
   await page.screenshot({ path: path.join(images, 'light-demo.png'), fullPage: true });
