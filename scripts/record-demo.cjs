@@ -26,7 +26,15 @@ const { pathToFileURL } = require('node:url');
    const a=await source.boundingBox(),b=await dest.boundingBox();
    await shot('編輯模式：把 GitHub 拖到閱讀清單');
    await page.mouse.move(a.x+12,a.y+a.height/2);await page.mouse.down();
-   for(let i=1;i<=16;i++){await page.mouse.move(a.x+12+(b.x+80-a.x-12)*i/16,a.y+a.height/2+(b.y+b.height-3-a.y-a.height/2)*i/16);await page.waitForTimeout(65);await shot('拖曳連結，跨區塊移動');}
+   for(let i=1;i<=60;i++) {
+    const t=i/60, eased=t*t*(3-2*t);
+    const x=a.x+12+(b.x+80-a.x-12)*eased;
+    const y=a.y+a.height/2+(b.y+b.height-3-a.y-a.height/2)*eased;
+    await page.mouse.move(x,y);
+    // Native HTML drag events suppress mousemove; keep the demo cursor in sync.
+    await page.evaluate(({x,y})=>{const p=document.querySelector('#demo-pointer');p.style.left=x+'px';p.style.top=y+'px';},{x,y});
+    await page.screenshot({path:path.join(frames,`drag-${String(n++).padStart(3,'0')}.png`)});
+   }
    await page.mouse.up();
    if(await page.locator('[data-lid="github"]').getAttribute('data-wid')!=='reading')throw Error('Real drag failed');
    await page.locator('#btnDone').click();for(let i=0;i<8;i++)await shot('完成：GitHub 已移到閱讀清單');
